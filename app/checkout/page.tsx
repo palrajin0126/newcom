@@ -52,12 +52,12 @@ export default function Checkout() {
     
             const idToken = await user.getIdToken(true);
     
-            const response = await axios.post('/api/order/create', {
+            const response = await axios.post('/api/Order/create', {
                 ...form,
                 idToken,
             });
     
-            router.push(`/orderplaced}`);
+            router.push(`/order}`);
         } catch (error) {
             console.error('Error placing order:', error);
         }

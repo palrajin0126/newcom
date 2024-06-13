@@ -1,5 +1,0 @@
-.show-on-larger-screens {
-    @media (min-width: 768px) {
-      display: flex !important;
-    }
-  }

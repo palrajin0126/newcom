@@ -69,7 +69,7 @@ const Navbar = () => {
                       Cart
                     </span>
                   </Link>
-                  <Link href="/order">
+                  <Link href="/Order">
                     <span className="block px-4 py-2 text-gray-700 hover:bg-gray-200">
                       Orders
                     </span>

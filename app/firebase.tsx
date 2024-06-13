@@ -1,12 +1,12 @@
-// firebase.tsx
+// Import the functions you need from the SDKs you need
+import { getApp, getApps, initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-import { getApp, getApps, initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
-import { getStorage } from 'firebase/storage';
-import * as dotenv from 'dotenv';
-
+const dotenv = require('dotenv');
 dotenv.config();
 
 // Your web app's Firebase configuration
@@ -24,34 +24,4 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-let messaging: ReturnType<typeof getMessaging> | undefined;
-
-if (typeof window !== 'undefined') {
-  messaging = getMessaging(app);
-  navigator.serviceWorker
-    .register('/firebase-messaging-sw.js')
-    .then((registration) => {
-      // Get token
-      getToken(messaging!, { vapidKey: process.env.NEXT_PUBLIC_FIREBASE_PUBLIC_VAPID_KEY!, serviceWorkerRegistration: registration })
-        .then((currentToken) => {
-          if (currentToken) {
-            console.log('Current token for client: ', currentToken);
-          } else {
-            console.log('No registration token available. Request permission to generate one.');
-          }
-        })
-        .catch((err) => {
-          console.error('An error occurred while retrieving token. ', err);
-        });
-
-      // Handle incoming messages
-      onMessage(messaging!, (payload) => {
-        console.log('Message received. ', payload);
-      });
-    })
-    .catch((err) => {
-      console.error('Service worker registration failed, error:', err);
-    });
-}
-
-export { app, db, auth, messaging, storage, getToken };
+export { app, db, auth, storage };
