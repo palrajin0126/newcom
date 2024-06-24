@@ -1,11 +1,20 @@
-"use client"
+"use client";
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import Head from 'next/head';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { doc, setDoc } from 'firebase/firestore';
+import { z } from 'zod';
+
+// Define a schema for form validation using zod
+const signupSchema = z.object({
+  fullName: z.string().min(1, 'Full Name is required'),
+  email: z.string().email('Invalid email address'),
+  mobile: z.string().min(10, 'Invalid mobile number'),
+  password: z.string().min(8, 'Password must be at least 8 characters long'),
+});
 
 const Signup = () => {
   const router = useRouter();
@@ -13,10 +22,18 @@ const Signup = () => {
   const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    
+    // Validate form data
+    const result = signupSchema.safeParse({ fullName, email, mobile, password });
+    if (!result.success) {
+      setError(result.error.errors[0].message);
+      return;
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -32,6 +49,8 @@ const Signup = () => {
         mobile: mobile,
       });
 
+      await sendEmailVerification(user);
+
       // Make an API request to your /api/signup route
       const response = await axios.post('/api/signup', {
         id: user.uid, // Use the user's uid from Firebase
@@ -41,14 +60,15 @@ const Signup = () => {
       });
 
       if (response.status === 201) { // Assuming 201 for created
-        alert('Account created successfully!');
-        router.push('/'); 
+        alert('Account created successfully! Please verify your email.');
+        router.push('/verify-email'); // Redirect to verify email page
       } else {
         console.error('Error creating user on the server:', response.data);
       }
 
     } catch (error) {
       console.error('Error creating user:', error);
+      setError('Failed to create account. Please try again.');
     }
   };
 
@@ -86,7 +106,7 @@ const Signup = () => {
         <label className="block mb-2">
           <span className="text-gray-600">Mobile</span>
           <input
-            type="number"
+            type="text"
             value={mobile}
             onChange={(event) => setMobile(event.target.value)}
             placeholder="+1 1234567890"
